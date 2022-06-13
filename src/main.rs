@@ -416,10 +416,15 @@ fn getQuantified(regexp: &Rc<Regex>, a: &mut u32, b: &mut u32) -> Rc<Regex>{
         let tmpregex = regexp.clone();
         Rc::new(Concat(Rc::new(Or(tmpregex, Rc::new(Eps()))), getQuantified(regexp, a, b)))
     }
-    // else if *a == 0 && *b == *a {
-    else {
+    else if *a == 0 && *b == 1 {
+        *b = *b - 1;
         let tmpregex = regexp.clone();
         Rc::new(Or(tmpregex, Rc::new(Eps())))
+    }
+    // else if *a == 0 && *b == *a {
+    else {
+        // let tmpregex = regexp.clone();
+        Rc::new(Eps())
     }
 }
 
