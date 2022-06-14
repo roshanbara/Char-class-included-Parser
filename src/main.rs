@@ -272,7 +272,7 @@ fn checkstate (curr: usize, final_states: &HashSet<u8>) -> bool {
             break;
         }
     }
-    println!("Checking curr state : {}", curr);
+    // println!("Checking curr state : {}", curr);
     res
 }
 
@@ -282,7 +282,7 @@ fn checkstr(s: &str, nfa: &Vec<Vec<u8>>, final_states: &HashSet<u8>, curr: usize
     let pass = checkstate(curr, final_states);
     
     if pass && idx == s.len() {
-        println!("Yess");
+        println!("Reached Final State {}", curr);
         res = true;
     } else if !pass && idx == s.len() {
         res = false;
@@ -475,7 +475,7 @@ fn getCharClass(token: &pest::iterators::Pair<Rule>, charvec: &mut Vec<bool>) {
         Rule::Letter => {
             // let tmp1 = tmp0.next().unwrap().into_inner();
             let a = token.as_str().chars().nth(0).unwrap() as u8;
-            println!("{}", a as char);
+            // println!("{}", a as char);
             // let a = tmp1.next().unwrap().as_str().chars().nth(0).unwrap() as u8;
             // let b = tmp1.next().unwrap().as_str().chars().nth(0).unwrap() as u8;
             charvec[a as usize] ^= true;
@@ -490,7 +490,7 @@ fn getletter(token: &pest::iterators::Pair<Rule>) -> u8 {
     match token.as_rule() {
         Rule::Letter => {
             let val = token.as_str().chars().nth(0).unwrap() as u8;
-            println!("{}", val as char);
+            // println!("{}", val as char);
             val
         },
         _ => {
@@ -623,7 +623,139 @@ fn parse_to_AST(token: &pest::iterators::Pair<Rule>) -> Rc<Regex> {
     }
 }
 
+fn getStateLabels(token: &pest::iterators::Pair<Rule>, state_labels: &mut Vec<String>) {
+    let mut tmp0 = token.clone().into_inner();
+    // println!("Yes : {:#?}", token);
+    match token.as_rule() {
+        Rule::Regex   => {
+            // println!("in Exp");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::Or=> {
+            // println!("Concat - ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::T0    => {
+            // println!("in T0 ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::Concat=> {
+            // println!("Concat - ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::T1    => {
+            // println!("in T1 ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::Star  => {
+            // println!("Star - ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::Plus  => {
+            // println!("Plus - ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::QMark  => {
+            // println!("Plus - ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::Quantifier    =>  {
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::LQuantifier    =>  {
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::UQuantifier    =>  {
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::FQuantifier    =>  {
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        Rule::T2    => {
+            // println!("in T2 ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+        
+        Rule::Paren    => {
+            // println!("in Paren ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
 
+        Rule::T3    => {
+            // println!("in T3 ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+
+        Rule::T4    => {
+            // println!("in T4 ");
+            getStateLabels(&tmp0.next().unwrap(), state_labels);
+        },
+
+        Rule::CharClass => {
+            let s1 = format!("[{}]", get_classlabel(&tmp0.next().unwrap()));
+            state_labels.push(s1);
+        },
+        Rule::NegCharClass => {
+            let s1 = format!("[^{}]", get_classlabel(&tmp0.next().unwrap()));
+            state_labels.push(s1);
+        },
+        // Rule::T5    => {
+        //     // println!("in T2 ");
+        //     parse_to_AST(&tmp0.next().unwrap())
+        // },
+        // Rule::T6    => {
+        //     // println!("in T2 ");
+        //     parse_to_AST(&tmp0.next().unwrap())
+        // },
+        Rule::Letter => {
+            state_labels.push(token.as_str().to_string());
+        },
+        _ => {
+            println!("Empty Generated");
+        }
+    }
+}
+
+fn get_classlabel(token: &pest::iterators::Pair<Rule>) -> String {
+    let mut tmp0 = token.clone().into_inner();
+    match token.as_rule() {
+        Rule::T5 => {
+            get_classlabel(&tmp0.next().unwrap())
+        },
+        Rule::T6 => {
+            let tmp1 = get_classlabel(&tmp0.next().unwrap());
+            let tmp2 = get_classlabel(&tmp0.next().unwrap());
+            let s1 = format!("{}{}", tmp1, tmp2);
+            s1
+        },
+        Rule::T7 => {
+            let tmp1 = get_classlabel(&tmp0.next().unwrap());
+            let tmp2 = get_classlabel(&tmp0.next().unwrap());
+            let s1 = format!("{}{}", tmp1, tmp2);
+            s1
+        },
+        Rule::T8 => {
+            get_classlabel(&tmp0.next().unwrap())
+        },
+        Rule::CharRange => {
+            let tmp1 = get_classlabel(&tmp0.next().unwrap());
+            let tmp2 = get_classlabel(&tmp0.next().unwrap());
+            let s1 = format!("{}-{}", tmp1, tmp2);
+            s1
+        },
+        Rule::Letter => {
+            // let tmp1 = get_classlabel(&tmp0.next().unwrap());
+            let s1 = token.as_str().to_string();
+            s1
+        },
+        _   =>    {
+            let s1 = "".to_string();
+            s1
+        }
+    }
+}
 
 
 fn main() {
@@ -650,21 +782,34 @@ fn main() {
     // Generate pair for the regex
     let mut pairs = RegEx::parse(Rule::Regex, regex_input).unwrap_or_else(|e| panic!("{}", e));
     // println!("Hello: {:#?}", pairs);
+    let mut pairs1 = pairs.clone();
+
+    let mut all_state_labels: Vec<String> = Vec::new();
+
+    getStateLabels(&pairs1.next().unwrap(), &mut all_state_labels);
+    // print!("State Labels: {{ 1: {}", all_state_labels[0]);
+    // for i in 1..all_state_labels.len() {
+    //     print!(", {}: {}", i+1, all_state_labels[i]);
+    // }
+    // println!("}}");
+
+    println!("State Labels: {:?}", all_state_labels);
+
 
     // Parse the pair to an AST
     let x = parse_to_AST(&pairs.next().unwrap());
 
     // println!("Hello: {:#?}", x);
     
-    println!("Test starts");
+    // println!("Test starts");
     // Comment from here
     let mut cnt = 1;
     let a = augment(&x, &mut cnt); 
-    println!("Test Ends");
+    // println!("Test Ends");
 
     let no_of_states = cnt;
 
-    println!("Hello: {:?}", a);
+    println!("Augmented enum form: {:?}", a);
     
     // Generate P, D, F sets
     let P_set = constructP(&a);
@@ -691,9 +836,9 @@ fn main() {
     println!("Number of States = {}", no_of_states);
     println!("NFA Adjacency Matrix : {:?}", array);
 
-    for i in 0..no_of_states-1 {
-        println!("Size[{}] : {}", i, state_letter[i as usize].len());
-    }
+    // for i in 0..no_of_states-1 {
+    //     println!("Size[{}] : {}", i, state_letter[i as usize].len());
+    // }
     
 
     if s.len() == 0 && matches!(findLambda(&a).deref(), Eps()) {
