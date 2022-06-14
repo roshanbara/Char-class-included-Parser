@@ -834,7 +834,7 @@ fn main() {
     println!("Dset = {:?}", D_set);
     println!("Fset = {:?}", F_set);
     println!("Number of States = {}", no_of_states);
-    println!("NFA Adjacency Matrix : {:?}", array);
+    println!("NFA Adjacency List : {:?}", array);
 
     // for i in 0..no_of_states-1 {
     //     println!("Size[{}] : {}", i, state_letter[i as usize].len());
